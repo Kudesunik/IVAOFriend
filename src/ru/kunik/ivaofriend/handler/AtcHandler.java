@@ -7,6 +7,7 @@ import javax.swing.JTextField;
 
 import ru.kunik.ivaofriend.gui.atc.AtcGUI;
 import ru.kunik.ivaofriend.gui.atc.AtcGUIState;
+import ru.kunik.ivaofriend.ivao.IvaoMetar;
 import ru.kunik.ivaofriend.listener.AtcListener;
 
 public class AtcHandler implements IHandler<AtcGUI> {
@@ -21,7 +22,7 @@ public class AtcHandler implements IHandler<AtcGUI> {
 		this.mainHandler = mainHandler;
 		this.atcListener = new AtcListener(this);
 		this.atcGUI = new AtcGUI(atcListener);
-		this.atcUpdater = new AtcUpdater(this);
+		this.atcUpdater = new AtcUpdater(this, mainHandler);
 	}
 	
 	public boolean startATC() {
@@ -34,6 +35,7 @@ public class AtcHandler implements IHandler<AtcGUI> {
 	
 	public void stopATC() {
 		atcUpdater.stopATC();
+		atcGUI.resetDynamicGUIFields();
 	}
 	
 	@Override
@@ -67,18 +69,44 @@ public class AtcHandler implements IHandler<AtcGUI> {
 	}
 	
 	public void setupAirportInformation(String name) {
-		String icaoString = JOptionPane.showInputDialog(getGUI(), "Set the " + name, "Airport information setup", JOptionPane.INFORMATION_MESSAGE);
+		String infoString = JOptionPane.showInputDialog(getGUI(), "Set the " + name, "Airport information setup", JOptionPane.INFORMATION_MESSAGE);
 		JTextField textField = atcGUI.getInformationField(name);
-		if((icaoString != null) && !icaoString.isEmpty()) {
-			textField.setText(icaoString);
-			textField.setBackground(AtcGUIState.OK.getColor());
+		if((infoString != null) && !infoString.isEmpty()) {
+			if(name.equals("ICAO") && mainHandler.getIvaoMetar().getMetar(infoString) == null) {
+				JOptionPane.showMessageDialog(getGUI(), "Airport ICAO \"" + infoString + "\" does not exist in IVAO METAR!", "Can't setup ATC", JOptionPane.ERROR_MESSAGE);
+			} else {
+				textField.setText(infoString);
+				textField.setBackground(AtcGUIState.OK.getColor());
+			}
 		} else {
 			textField.setText("");
-			textField.setBackground(AtcGUIState.FAIL.getColor());
+			if(name.equals("Active RWY 2") || name.equals("Active RWY 3")) {
+				textField.setBackground(AtcGUIState.UNVERIFIABLE.getColor());
+			} else {
+				textField.setBackground(AtcGUIState.FAIL.getColor());
+			}
 			if(atcUpdater.isAtcUpdaterAlive()) {
-				JOptionPane.showMessageDialog(getGUI(), name + " is missed!", "Can't update ATC", JOptionPane.ERROR_MESSAGE);
 				stopATC();
+				JOptionPane.showMessageDialog(getGUI(), name + " is missed!", "Can't setup ATC", JOptionPane.ERROR_MESSAGE);
 			}
 		}
+		if(name.equals("ICAO")) {
+			updateMetarInformation();
+		}
+	}
+	
+	public boolean updateMetarInformation() {
+		IvaoMetar ivaoMetar = mainHandler.getIvaoMetar();
+		String metar = ivaoMetar.getMetar(atcGUI.getInformationField("ICAO").getText());
+		JTextField metarTextField = atcGUI.getInformationField("METAR");
+		if((metar != null) && !metar.isEmpty()) {
+			metarTextField.setText(metar);
+			metarTextField.setBackground(AtcGUIState.OK.getColor());
+			return true;
+		} else {
+			metarTextField.setText("");
+			metarTextField.setBackground(AtcGUIState.FAIL.getColor());
+		}
+		return false;
 	}
 }

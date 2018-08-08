@@ -25,15 +25,12 @@ public class AtcListener implements ActionListener, MouseListener {
 			JTextField textField = (JTextField) mouseEventObject;
 			String textFieldName = textField.getName();
 			if((textFieldName != null) && !textFieldName.isEmpty()) {
-				/* @formatter:off */
-				if(textFieldName.equals("ICAO") || textFieldName.equals("Active RWY 1") 
-						|| textFieldName.equals("Transition level") || textFieldName.equals("Transition altitude") 
-						|| textFieldName.equals("Squawk (start)") || textFieldName.equals("Squawk (end)") 
-						|| textFieldName.equals("DEL frequency") || textFieldName.equals("GND frequency") 
-						|| textFieldName.equals("TWR frequency") || textFieldName.equals("APP frequency")) {
+				if(atcHandler.getGUI().isFieldWithListener(textFieldName)) {
+					if(textFieldName.equals("METAR")) {
+						textFieldName = "ICAO";
+					}
 					atcHandler.setupAirportInformation(textFieldName);
 				}
-				/* @formatter:on */
 			}
 		}
 	}

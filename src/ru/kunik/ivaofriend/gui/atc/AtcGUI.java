@@ -4,6 +4,7 @@ import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 
+import ru.kunik.ivaofriend.gui.IvaoGUI;
 import ru.kunik.ivaofriend.gui.util.AlphaContainer;
 import ru.kunik.ivaofriend.listener.AtcListener;
 import java.awt.GridBagLayout;
@@ -18,6 +19,7 @@ import javax.swing.border.LineBorder;
 import java.awt.Color;
 import javax.swing.JLabel;
 import java.awt.Font;
+
 import javax.swing.JButton;
 import javax.swing.JSeparator;
 import javax.swing.SwingConstants;
@@ -26,13 +28,11 @@ import javax.swing.JTextField;
 import javax.swing.JToggleButton;
 
 @SuppressWarnings("serial")
-public class AtcGUI extends JFrame {
+public class AtcGUI extends IvaoGUI {
 	
 	private JPanel contentPane;
 	
-	private final Color ivaoColor;
-	private final Color backgroundMessageColor;
-	private final Color borderMessageColor;
+	private JToggleButton toggleButtonUpdate;
 	
 	private JTextField fieldGlobalInformationDate;
 	private JTextField fieldGlobalInformationTime;
@@ -73,13 +73,17 @@ public class AtcGUI extends JFrame {
 	private JTextField fieldAirportInformationSquawkEnd;
 	private JTextField fieldAirportInformationSquawkFree;
 	
-	private Map<String, JTextField> informationFields;
+	private final Map<String, JTextField> informationFields;
+	
+	private final List<String> fieldsWithListeners;
 	
 	public AtcGUI(AtcListener listener) {
 		
 		super("IVAO Friend (ATC window)");
 		
 		setResizable(false);
+		
+		setIconImage(programImage);
 		
 		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
 		setBounds(100, 100, 1280, 800);
@@ -89,11 +93,8 @@ public class AtcGUI extends JFrame {
 		
 		setContentPane(contentPane);
 		
-		this.ivaoColor = new Color(40, 74, 130);
-		this.backgroundMessageColor = new Color(240, 240, 240);
-		this.borderMessageColor = new Color(184, 208, 230);
-		
 		this.informationFields = new HashMap<>();
+		this.fieldsWithListeners = new ArrayList<>();
 		
 		GridBagLayout gbl_contentPane = new GridBagLayout();
 		gbl_contentPane.columnWidths = new int[]{0, 0, 0, 0};
@@ -185,7 +186,7 @@ public class AtcGUI extends JFrame {
 		gbl_panelPlanesButtons.rowWeights = new double[]{0.0, 0.0, Double.MIN_VALUE};
 		panelPlanesButtons.setLayout(gbl_panelPlanesButtons);
 		
-		JToggleButton toggleButtonUpdate = new JToggleButton("Enable ATC");
+		toggleButtonUpdate = new JToggleButton("Enable ATC");
 		GridBagConstraints gbc_toggleButtonUpdate = new GridBagConstraints();
 		gbc_toggleButtonUpdate.fill = GridBagConstraints.HORIZONTAL;
 		gbc_toggleButtonUpdate.insets = new Insets(2, 2, 2, 2);
@@ -2113,7 +2114,7 @@ public class AtcGUI extends JFrame {
 		gbc_fieldAirportInformationActiveRWY2.fill = GridBagConstraints.HORIZONTAL;
 		gbc_fieldAirportInformationActiveRWY2.gridx = 0;
 		gbc_fieldAirportInformationActiveRWY2.gridy = 0;
-		panelAirportInformationActiveRWY2Field.add(fieldAirportInformationActiveRWY2, gbc_fieldAirportInformationActiveRWY2);
+		panelAirportInformationActiveRWY2Field.add(new AlphaContainer(fieldAirportInformationActiveRWY2), gbc_fieldAirportInformationActiveRWY2);
 		fieldAirportInformationActiveRWY2.setColumns(10);
 		
 		JPanel panelAirportInformationActiveRWY3Title = new JPanel();
@@ -2161,7 +2162,7 @@ public class AtcGUI extends JFrame {
 		gbc_fieldAirportInformationActiveRWY3.fill = GridBagConstraints.HORIZONTAL;
 		gbc_fieldAirportInformationActiveRWY3.gridx = 0;
 		gbc_fieldAirportInformationActiveRWY3.gridy = 0;
-		panelAirportInformationActiveRWY3Field.add(fieldAirportInformationActiveRWY3, gbc_fieldAirportInformationActiveRWY3);
+		panelAirportInformationActiveRWY3Field.add(new AlphaContainer(fieldAirportInformationActiveRWY3), gbc_fieldAirportInformationActiveRWY3);
 		fieldAirportInformationActiveRWY3.setColumns(10);
 		
 		JPanel panelAirportInformationTransitionLevelTitle = new JPanel();
@@ -2645,7 +2646,7 @@ public class AtcGUI extends JFrame {
 		gbc_fieldAirportInformationMETAR.fill = GridBagConstraints.HORIZONTAL;
 		gbc_fieldAirportInformationMETAR.gridx = 0;
 		gbc_fieldAirportInformationMETAR.gridy = 0;
-		panelAirportInformationMETARField.add(fieldAirportInformationMETAR, gbc_fieldAirportInformationMETAR);
+		panelAirportInformationMETARField.add(new AlphaContainer(fieldAirportInformationMETAR), gbc_fieldAirportInformationMETAR);
 		fieldAirportInformationMETAR.setColumns(10);
 		
 		this.informationFields.put("Date", fieldGlobalInformationDate);
@@ -2695,34 +2696,56 @@ public class AtcGUI extends JFrame {
 		}
 		
 		this.fieldAirportInformationICAO.setBackground(AtcGUIState.FAIL.getColor());
+		this.fieldsWithListeners.add(this.fieldAirportInformationICAO.getName());
 		this.fieldAirportInformationICAO.addMouseListener(listener);
 		
 		this.fieldAirportInformationActiveRWY1.setBackground(AtcGUIState.FAIL.getColor());
+		this.fieldsWithListeners.add(this.fieldAirportInformationActiveRWY1.getName());
 		this.fieldAirportInformationActiveRWY1.addMouseListener(listener);
 		
+		this.fieldAirportInformationActiveRWY2.setBackground(AtcGUIState.UNVERIFIABLE.getColor());
+		this.fieldsWithListeners.add(this.fieldAirportInformationActiveRWY2.getName());
+		this.fieldAirportInformationActiveRWY2.addMouseListener(listener);
+		
+		this.fieldAirportInformationActiveRWY3.setBackground(AtcGUIState.UNVERIFIABLE.getColor());
+		this.fieldsWithListeners.add(this.fieldAirportInformationActiveRWY3.getName());
+		this.fieldAirportInformationActiveRWY3.addMouseListener(listener);
+		
 		this.fieldAirportInformationTransitionLevel.setBackground(AtcGUIState.FAIL.getColor());
+		this.fieldsWithListeners.add(this.fieldAirportInformationTransitionLevel.getName());
 		this.fieldAirportInformationTransitionLevel.addMouseListener(listener);
 		
 		this.fieldAirportInformationTransitionAltitude.setBackground(AtcGUIState.FAIL.getColor());
+		this.fieldsWithListeners.add(this.fieldAirportInformationTransitionAltitude.getName());
 		this.fieldAirportInformationTransitionAltitude.addMouseListener(listener);
 		
 		this.fieldAirportInformationSquawkStart.setBackground(AtcGUIState.FAIL.getColor());
+		this.fieldsWithListeners.add(this.fieldAirportInformationSquawkStart.getName());
 		this.fieldAirportInformationSquawkStart.addMouseListener(listener);
 		
 		this.fieldAirportInformationSquawkEnd.setBackground(AtcGUIState.FAIL.getColor());
+		this.fieldsWithListeners.add(this.fieldAirportInformationSquawkEnd.getName());
 		this.fieldAirportInformationSquawkEnd.addMouseListener(listener);
 		
 		this.fieldAirportInformationDELFrequency.setBackground(AtcGUIState.FAIL.getColor());
+		this.fieldsWithListeners.add(this.fieldAirportInformationDELFrequency.getName());
 		this.fieldAirportInformationDELFrequency.addMouseListener(listener);
 		
 		this.fieldAirportInformationGNDFrequency.setBackground(AtcGUIState.FAIL.getColor());
+		this.fieldsWithListeners.add(this.fieldAirportInformationGNDFrequency.getName());
 		this.fieldAirportInformationGNDFrequency.addMouseListener(listener);
 		
 		this.fieldAirportInformationTWRFrequency.setBackground(AtcGUIState.FAIL.getColor());
+		this.fieldsWithListeners.add(this.fieldAirportInformationTWRFrequency.getName());
 		this.fieldAirportInformationTWRFrequency.addMouseListener(listener);
 		
 		this.fieldAirportInformationAPPFrequency.setBackground(AtcGUIState.FAIL.getColor());
+		this.fieldsWithListeners.add(this.fieldAirportInformationAPPFrequency.getName());
 		this.fieldAirportInformationAPPFrequency.addMouseListener(listener);
+		
+		this.fieldAirportInformationMETAR.setBackground(AtcGUIState.FAIL.getColor());
+		this.fieldsWithListeners.add(this.fieldAirportInformationMETAR.getName());
+		this.fieldAirportInformationMETAR.addMouseListener(listener);
 		
 		toggleButtonUpdate.setName("Enable ATC");
 		toggleButtonUpdate.addActionListener(listener);
@@ -2735,6 +2758,10 @@ public class AtcGUI extends JFrame {
 		return null;
 	}
 	
+	public boolean isFieldWithListener(String name) {
+		return fieldsWithListeners.contains(name);
+	}
+	
 	public List<String> getEmptyInformationFields(String... names) {
 		List<String> emptyNames = new ArrayList<>();
 		for(String name : names) {
@@ -2744,5 +2771,14 @@ public class AtcGUI extends JFrame {
 			}
 		}
 		return emptyNames;
+	}
+	
+	public void resetDynamicGUIFields() {
+		fieldAirportInformationMETAR.setText("");
+		fieldAirportInformationMETAR.setBackground(AtcGUIState.FAIL.getColor());
+		fieldGlobalInformationDate.setText("");
+		fieldGlobalInformationTime.setText("");
+		toggleButtonUpdate.setSelected(false);
+		toggleButtonUpdate.setText("Enable ATC");
 	}
 }
